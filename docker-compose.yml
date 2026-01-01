@@ -1,0 +1,196 @@
+version: "3.9"
+services:
+  information-service:
+    build: 
+      context: ./services/information-service
+    container_name: information-service
+    ports: 
+      - "8001:8001"
+    depends_on:
+      - information-db
+    env_file:
+      - ./services/information-service/.env
+    networks:
+      - leafnet
+  
+  information-db:
+    image: postgres:14
+    container_name: information-db
+    ports:
+      - 5435:5432
+    volumes:
+      - information-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=informationDB
+      - POSTGRES_USER=informationAdmin
+      - POSTGRES_PASSWORD=singer22 
+    networks:
+      - leafnet
+
+  diagnostico-service:
+    build: 
+      context: ./services/diagnostico-service
+    container_name: diagnostico-service
+    ports: 
+      - "8002:8002"
+    depends_on:
+      - diagnostico-db
+    env_file:
+      - ./services/diagnostico-service/.env
+    networks:
+      - leafnet
+  
+  diagnostico-db:
+    image: postgres:14
+    container_name: diagnostico-db
+    ports:
+      - 5436:5432
+    volumes:
+      - diagnostico-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=diagnosticoDB
+      - POSTGRES_USER=leafAdmin
+      - POSTGRES_PASSWORD=singer22 
+    networks:
+      - leafnet
+
+  products:
+    build:
+      context: ./services/products
+    container_name: products-service
+    ports:
+      - "8084:8084"
+    environment:
+      DB_URL: jdbc:mysql://products-db:3306/products_db?createDatabaseIfNotExist=true&serverTimezone=UTC
+      DB_USER_NAME: root
+      DB_PASSWORD: 12345
+    restart: always
+    depends_on:
+      products-db:
+        condition: service_healthy
+    networks:
+      - leafnet
+
+  products-db:
+    image: mysql:8.0.33
+    container_name: products-db
+    ports:
+      - 3308:3306 
+    volumes:
+      - products-db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: products_db
+    networks:
+      - leafnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+
+  auth-service:
+    build:
+      context: ./services/auth-service 
+    container_name: auth-service
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:mysql://auth-db:3306/auth_db?createDatabaseIfNotExist=true&serverTimezone=UTC
+      DB_USER_NAME: root
+      DB_PASSWORD: 12345
+    restart: always
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - leafnet
+    
+  auth-db:
+    image: mysql:8.0.33
+    container_name: auth-db
+    ports:
+      - 3309:3306  
+    volumes:
+      - auth-db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: auth_db
+    networks:
+      - leafnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+
+  user:
+    build:
+      context: ./services/user 
+    container_name: user
+    ports:
+      - "8085:8085"
+    environment:
+      DB_URL: jdbc:mysql://user-db:3306/user_db?createDatabaseIfNotExist=true&serverTimezone=UTC
+      DB_USER_NAME: root
+      DB_PASSWORD: 12345
+    restart: always
+    depends_on:
+      user-db:
+        condition: service_healthy
+    networks:
+      - leafnet
+    
+  user-db:
+    image: mysql:8.0.33
+    container_name: user-db
+    ports:
+      - 3310:3306  
+    volumes:
+      - user-db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: user_db
+    networks:
+      - leafnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+  
+  seguimiento-service:
+    build:
+      context: ./services/seguimiento-service
+    container_name: seguimiento-service
+    ports: 
+      - "8003:8003"
+    depends_on:
+      - seguimiento-db
+    env_file:
+      - ./services/seguimiento-service/.env
+    networks:
+      - leafnet
+
+  seguimiento-db:
+    image: postgres:14
+    container_name: seguimiento-db
+    ports:
+      - "5437:5432"
+    volumes:
+      - /home/alexis-1729/lib/postgresql/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=seguimientodb
+      - POSTGRES_USER=seguimientouser
+      - POSTGRES_PASSWORD=singerseg219
+    networks:
+      - leafnet 
+      
+volumes:
+  diagnostico-db-data:
+  information-db-data:
+  # seguimiento-db-data:
+  products-db-data:
+  auth-db-data:
+  user-db-data:
+
+networks:
+  leafnet:
+    driver: bridge

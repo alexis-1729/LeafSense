@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+numpy
+psycopg2-binary
+python-dotenv
+httpx
+Pillow
+tensorflow-cpu
+python-multipart
