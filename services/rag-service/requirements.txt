@@ -1,0 +1,12 @@
+cryptography==44.0.2
+fastapi==0.115.12
+httpx==0.28.1
+psycopg[binary]==3.2.6
+PyJWT==2.10.1
+pypdf==5.4.0
+python-multipart==0.0.20
+qdrant-client==1.19.1
+sentence-transformers==3.4.1
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.1+cpu
+uvicorn[standard]==0.34.0

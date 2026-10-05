@@ -1,0 +1,6 @@
+cryptography==44.0.2
+email-validator==2.2.0
+fastapi==0.115.12
+psycopg[binary]==3.2.6
+PyJWT==2.10.1
+uvicorn[standard]==0.34.0

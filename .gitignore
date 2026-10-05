@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+/model_artifacts/*
+!/model_artifacts/.gitkeep
+/secrets/*
