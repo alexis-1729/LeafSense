@@ -1,9 +1,5 @@
 # LeafSense
 
-## Infrastructure bootstrap
-
-The current stages include Traefik, PostgreSQL, Qdrant, the ONNX-based
-`analysis-service`, `auth`, `users`, and the RAG document ingestion API/worker.
 
 1. Copy `.env.example` to `.env` and set unique, strong values for all five secrets.
    The image dimensions and normalization values must also match the CNN training
@@ -36,11 +32,6 @@ openssl pkey -in secrets/jwt_private.pem -pubout -out secrets/jwt_public.pem
 openssl rand -hex 32 > secrets/internal_service_token
 chmod 0400 secrets/jwt_private.pem secrets/jwt_public.pem secrets/internal_service_token
 ```
-
-These files are mounted as Compose secrets and ignored by git. Restrict host access
-to the workspace, set `HOST_UID` and `HOST_GID` to the owner of these files so the
-non-root app containers can read them, and use a production secret manager outside
-local development.
 Set `JWT_KEY_ID` to a new value when rotating the signing key and replace the public
 key mounted in `users` at the same time. With this single-key setup, existing access
 tokens will stop validating immediately after rotation, so clients must authenticate
@@ -80,22 +71,7 @@ model or vector dimension requires a new Qdrant collection and reindexing.
 Authenticated users can submit `POST /rag/diagnose` with
 `multipart/form-data` fields `image` (JPEG, PNG, or WEBP; limited by
 `MAX_IMAGE_BYTES`) and optional `crop` and `language`, plus a Bearer access token.
-The API classifies the image through `analysis-service`, searches up to five
-matching Qdrant chunks, and requests a structured diagnosis from the configured
-OpenAI-compatible chat-completions endpoint only when confidence is at least
-`DIAGNOSIS_CONFIDENCE_THRESHOLD` and matching source chunks exist. Below that
-threshold, or when no relevant chunks are indexed, it returns a non-conclusive
-result without calling the LLM. Every completed result is stored in `rag_db`;
-configure `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY` in the ignored local
-`.env` (or inject the key through production secret management). An unset key
-returns HTTP 503 only when a conclusive diagnosis requires the LLM.
 
-Registration creates role `user`; promote an account to administrator explicitly
-from a trusted database session before using ingestion, for example:
-
-```sql
-UPDATE credentials SET role = 'admin' WHERE email = 'admin@example.com';
-```
 
 The analysis API provides `GET /health/live`, `GET /health/ready`, `GET /v2/models`,
 and `POST /v2/models/pest-cnn/infer`. The request body is JSON with an `image`
@@ -103,16 +79,7 @@ property containing standard base64-encoded image bytes (no data-URI prefix).
 JPEG, PNG, and WEBP are accepted. The response contains `label`, `confidence`, and
 `top_k`.
 
-The PostgreSQL initialization script creates `auth_db`, `users_db`, and `rag_db`,
-each owned by a separate non-superuser role. Docker runs this script only when
-initializing an empty `pgdata` volume. Changing credentials later requires updating
-the corresponding database role as well; changing `.env` alone does not rotate
-credentials already stored in PostgreSQL.
-
 The `pgdata` and `qdrant_data` volumes persist across container recreation. Do not
 use `docker compose down -v` unless intentionally deleting all persisted data.
 
-The HTTPS entrypoint is reserved for application routers; TLS certificates and
-domain-specific routing must be configured before production exposure. The Docker
-socket mount is needed for Traefik's Docker provider and should be replaced with a
-restricted socket proxy in a hardened deployment.
+
